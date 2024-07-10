@@ -1,0 +1,11 @@
+FROM icr.io/ibm-messaging/mq:9.4.0.0-r1
+
+ARG QMGR
+
+ENV LICENSE=accept
+ENV MQ_QMGR_NAME=$QMGR
+ENV MQ_ADMIN_PASSWORD=passw0rd
+ENV MQ_APP_PASSWORD=passw0rd1
+ENV MQ_ENABLE_EMBEDDED_WEB_SERVER=false
+
+COPY $QMGR.mqsc /etc/mqm/

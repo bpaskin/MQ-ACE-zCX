@@ -1,0 +1,30 @@
+# Requires MQ client downloaded :  https://ibm.biz/mq93clients
+# Update the MQCLIENT_TARBALL with the proper name
+
+FROM cp.icr.io/cp/appc/ace:12.0.12.2-r1 
+
+ARG BARNAME=MQtoMQ.bar
+ARG MQCLIENT_TARBALL=9.3.5.1-IBM-MQC-LinuxS390X.tar.gz
+ARG HOSTNAME
+ENV LICENSE=accept
+ENV ACE_SERVER_NAME=MQ2MQ
+
+user root
+
+COPY $MQCLIENT_TARBAL /tmp/
+COPY $BARNAME /home/aceuser/initial-config/bar/
+
+RUN cd /tmp \
+    && tar -zxvf $MQCLIENT_TARBALL \
+    && cd /tmp/MQClient \
+    && ./mqlicense.sh -accept \
+    && rpm -ivh MQSeriesRuntime*.rpm MQSeriesJava*.rpm MQSeriesJRE*.rpm MQSeriesGSKit*.rpm MQSeriesClient*.rpm \
+    && rm -Rf /tmp/$MQCLIENT_TARBALL /tmp/MQClient
+
+RUN source /opt/ibm/ace-12/server/bin/mqsiprofile \
+    && /opt/ibm/ace-12/server/bin/mqsiapplybaroverride -b /home/aceuser/initial-config/bar/$BARNAME -k MQtoMQ -m MQtoMQ#QM1.queueManagerHostname=$HOSTNAME,MQtoMQ#QM2.queueManagerHostname=$HOSTNAME \
+    && /opt/ibm/ace-12/server/bin/mqsibar -a /home/aceuser/initial-config/bar/$BARNAME -c -w /home/aceuser/ace-server \
+    && chmod -R 777 /home/aceuser/ /var/mqsi/
+ 
+USER aceuser
+

@@ -1,0 +1,45 @@
+FROM cp.icr.io/cp/ibm-mqadvanced-server:9.4.0.0-r1
+
+ENV LICENSE=accept
+ENV MQ_QMGR_NAME=AMS
+ENV MQ_ADMIN_PASSWORD=passw0rd
+ENV MQ_APP_PASSWORD=passw0rd1
+ENV MQ_ENABLE_EMBEDDED_WEB_SERVER=false
+ENV MQS_KEYSTORE_CONF=/home/bob/.mqs/keystore.conf
+
+COPY AMS.mqsc /etc/mqm/
+
+# Add new users and create the .mqs directory that will house
+# the certificate keystores and files
+USER root
+RUN    useradd -d /home/alice alice \
+    && useradd -d /home/bob bob \
+    && echo passw0rd | passwd alice --stdin \
+    && echo passw0rd | passwd bob --stdin \
+    && usermod -a -G alice bob \
+    && usermod -a -G bob alice \
+    && mkdir -p /home/alice/.mqs /home/bob/.mqs \
+    && chown -R alice /home/alice/.mqs \
+    && chown -R bob /home/bob/.mqs
+
+# create the keystore and certs
+RUN    runmqakm -keydb -create -db /home/alice/.mqs/alicekey.kdb -pw passw0rd -stash \
+    && runmqakm -keydb -create -db /home/bob/.mqs/bobkey.kdb -pw passw0rd -stash \
+    && runmqakm -cert -create -db /home/alice/.mqs/alicekey.kdb -pw passw0rd -label Alice_Cert -dn "cn=alice,O=IBM,c=GB" -default_cert yes \
+    && runmqakm -cert -create -db /home/bob/.mqs/bobkey.kdb -pw passw0rd -label Bob_Cert -dn "cn=bob,O=IBM,c=GB" -default_cert yes \
+    && runmqakm -cert -extract -db /home/alice/.mqs/alicekey.kdb -pw passw0rd -label Alice_Cert -target /home/alice/.mqs/alice_public.arm \
+    && runmqakm -cert -extract -db /home/bob/.mqs/bobkey.kdb -pw passw0rd -label Bob_Cert -target /home/bob/.mqs/bob_public.arm \
+    && runmqakm -cert -add -db /home/bob/.mqs/bobkey.kdb -pw passw0rd -label Alice_Cert -file /home/alice/.mqs/alice_public.arm \
+    && runmqakm -cert -add -db /home/alice/.mqs/alicekey.kdb -pw passw0rd -label Bob_Cert -file /home/bob/.mqs/bob_public.arm
+
+# key setup for each user
+RUN    echo "cms.keystore = /home/alice/.mqs/alicekey" > /home/alice/.mqs/keystore.conf \
+    && echo "cms.certificate = Alice_Cert" >> /home/alice/.mqs/keystore.conf \
+    && echo "cms.keystore = /home/bob/.mqs/bobkey" > /home/bob/.mqs/keystore.conf \
+    && echo "cms.certificate.channel.SYSTEM.DEF.SVRCONN = Bob_Cert" >> /home/bob/.mqs/keystore.conf  
+
+RUN    chmod 600 /home/alice/.mqs/alicekey.kdb /home/alice/.mqs/alicekey.sth /home/bob/.mqs/bobkey.kdb /home/bob/.mqs/bobkey.sth \
+    && chown -R alice:alice /home/alice/.mqs \
+    && chown -R bob:bob /home/bob/.mqs
+
+USER 1001
