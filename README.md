@@ -12,7 +12,8 @@ Place the XML message on the QM1 QMGR on Queue QM1.  This will causes ACE to pic
 
 ---
 
-Make sure to download the MQ Client as mentioned in the Dockerfile.ace
+- Make sure to download the MQ Client as mentioned in the Dockerfile.ace
+- CONNAME in MQSC files will need to be updated for target system
 
 ---
 
