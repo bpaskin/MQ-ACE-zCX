@@ -1,10 +1,10 @@
-# Requires MQ client downloaded :  https://ibm.biz/mq93clients
+# Requires MQ client downloaded :  https://ibm.biz/mq94clients
 # Update the MQCLIENT_TARBALL with the proper name
 
 FROM cp.icr.io/cp/appc/ace:12.0.12.2-r1 
 
 ARG BARNAME=MQtoMQ.bar
-ARG MQCLIENT_TARBALL=9.3.5.1-IBM-MQC-LinuxS390X.tar.gz
+ARG MQCLIENT_TARBALL=9.0.4.5-IBM-MQC-LinuxS390X.tar.gz
 ARG HOSTNAME
 ENV LICENSE=accept
 ENV ACE_SERVER_NAME=MQ2MQ
