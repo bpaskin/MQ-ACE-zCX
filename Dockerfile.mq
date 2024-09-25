@@ -1,4 +1,4 @@
-FROM icr.io/ibm-messaging/mq:9.4.0.0-r1
+FROM icr.io/ibm-messaging/mq:9.4.0.5-r1
 
 ARG QMGR
 
