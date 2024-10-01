@@ -1,7 +1,7 @@
 # Requires MQ client downloaded :  https://ibm.biz/mq94clients
 # Update the MQCLIENT_TARBALL with the proper name
 
-FROM cp.icr.io/cp/appc/ace:13.0.10-r1 
+FROM cp.icr.io/cp/appc/ace:13.0.1-r1 
 
 ARG BARNAME=MQtoMQ.bar
 ARG MQCLIENT_TARBALL=9.0.4.5-IBM-MQC-LinuxS390X.tar.gz
